@@ -1,3 +1,10 @@
 {
-  "store": "dataStore"
+    "logging": {
+        "where": [
+            "logFiless"
+        ],
+        "type": [
+            "all"
+        ]
+    }
 }
