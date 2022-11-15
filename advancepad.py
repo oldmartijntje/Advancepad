@@ -102,7 +102,7 @@ def createFile(name):
         seed = int(seedString)
         return seed
     
-    fileKey = stringToAscii(f"{fileExtension}{datetime.datetime.now().strftime('%d_%m_%Y-%H_%M_%S')}{name}{random.randint(0,stringToAscii(name))}")
+    fileKey = stringToAscii(f"{fileExtension}{datetime.datetime.now().strftime('%d%m%Y%H%M%S')}{name}{random.randint(0,10)}")
     checkLogging(f"making: {fileKey}", 'modify')
     if name in libContext["names"]:
         libContext["names"][name].append(f'{fileKey}{fileExtension}')
