@@ -1,6 +1,7 @@
 import json
 import os
 import datetime
+import random
 
 # logging types:
 # none
@@ -16,7 +17,7 @@ interperatorFileExtension = fileExtension
 maxPathLength = 10
 baseInterperator = {"storeData": ["dataStore"], "logging": {"where": ["logFiles"], "type": ["all"]},
     "context": {"idNumber":0}, "library":"libraryContext", "extension": ".json"}
-baseLibContext = {"items": {}}
+baseLibContext = {"names": {}}
 logFile = ''
 basePath = ''
 interperator = {}
@@ -31,16 +32,18 @@ def checkLoadSaveJson(location = '', data =''):
     else:
         with open(f'{location}{fileExtension}', 'w') as outfile:
             json.dump(data, outfile, indent=4)
-        checkLogging(f'made file: {location}{fileExtension}')
+        checkLogging(f'made file: {location}{fileExtension}', 'modify')
     return data
 
 def saveFile(location = '', data = ''):
-    if location == interperatorFile:
-        with open(f'{location}{interperatorFileExtension}', 'w') as outfile:
-            json.dump(data, outfile, indent=4)
-    else:
-        with open(f'{location}{fileExtension}', 'w') as outfile:
-            json.dump(data, outfile, indent=4)
+    if location != '' and data != '':
+        checkLogging(f"savefile: {location}", 'modify')
+        if location == interperatorFile:
+            with open(f'{location}{interperatorFileExtension}', 'w') as outfile:
+                json.dump(data, outfile, indent=4)
+        else:
+            with open(f'{location}{fileExtension}', 'w') as outfile:
+                json.dump(data, outfile, indent=4)
 
 def logging(itemToLog: str = 'defaultValue', type = ''):
     if logFile != '':
@@ -49,7 +52,7 @@ def logging(itemToLog: str = 'defaultValue', type = ''):
         log.close() 
 
 def checkLogging(logMessage: str = '', typeOfLog: str = 'default'):
-    if len(interperator) > 0:
+    if len(interperator) > 0 and logFile != '':
         if logMessage != '' and "none" not in interperator["logging"]["type"]:
             if typeOfLog == 'default' and 'all' in interperator["logging"]["type"]:
                 logging(logMessage)
@@ -58,7 +61,7 @@ def checkLogging(logMessage: str = '', typeOfLog: str = 'default'):
             elif typeOfLog == 'error' and ('all' in interperator["logging"]["type"] or 'error' in interperator["logging"]["type"]):
                 logging(logMessage, '> Error: ')
             elif typeOfLog == 'modify' and ('all' in interperator["logging"]["type"] or 'modify' in interperator["logging"]["type"]):
-                logging(logMessage, 'modified: ')
+                logging(logMessage, 'fileChange: ')
             elif typeOfLog in interperator["logging"]["type"] or 'all' in interperator["logging"]["type"]:
                 logging(logMessage)
 
@@ -81,16 +84,15 @@ def checkMakeFolderPath(givenPath: list = []):
     return currentPath
 
 def exitCode():
+    saveFile(interperator["library"],libContext)
+    saveFile(interperatorFile,interperator)
     log = open(f'{logFile}', "r")
     text = log.read()
     log.close()
-    saveFile(interperator["library"],libContext)
-    saveFile(interperatorFile,interperator)
     if text == '' or "deleteAfter" in interperator["logging"]["type"]:
         os.remove(f'{logFile}')
 
 def createFile(name):
-    
     def stringToAscii(seedString:str): #turns everything into ther ASCII value
         seedList = []
         for x in seedString:
@@ -99,19 +101,31 @@ def createFile(name):
         seed = int(seedString)
         return seed
     
+    fileKey = stringToAscii(f"{fileExtension}{datetime.datetime.now().strftime('%d_%m_%Y-%H_%M_%S')}{name}{random.randint(0,stringToAscii(name))}")
+    checkLogging(f"making: {fileKey}", 'modify')
+    if name in libContext["names"]:
+        libContext["names"][name].append(f'{fileKey}{fileExtension}')
+    else:
+        libContext["names"][name] = [f'{fileKey}{fileExtension}']
+    file = {"title": name, "id": fileKey, "fileExtension": fileExtension, "contents": {"dict": {"defaultBox": "Hello World!"}, "list": ["defaultBox"]}}
+    checkLoadSaveJson(f"{basePath}/{fileKey}", file)
 
 
 interperator = checkLoadSaveJson(interperatorFile,baseInterperator)
 
 if not "extension" in interperator:
     interperator["extension"] = baseInterperator["extension"]
+    checkLogging(f"interperator[\"extension\"] was not a thing, so we made it ```{interperator['extension']}```", 'warning')
 fileExtension = interperator["extension"]
 if not "logging" in interperator:
     interperator["logging"] = baseInterperator["logging"]
+    checkLogging(f"interperator[\"logging\"] was not a thing, so we made it ```{interperator['logging']}```", 'warning')
 if not "where" in interperator["logging"]:
     interperator["logging"]["where"] = baseInterperator["logging"]["where"]
+    checkLogging(f"interperator[\"logging\"][\"where\"] was not a thing, so we made it ```{interperator['logging']['where']}```", 'warning')
 if not "type" in interperator["logging"]:
     interperator["logging"]["type"] = baseInterperator["logging"]["type"]
+    checkLogging(f"interperator[\"logging\"][\"type\"] was not a thing, so we made it ```{interperator['logging']['type']}```", 'warning')
 if "none" not in baseInterperator["logging"]["type"]:
     logFile = checkMakeFolderPath(interperator["logging"]["where"])
     logFile = f"{logFile}/log{datetime.datetime.now().strftime('%d_%m_%Y-%H_%M_%S')}.md"
