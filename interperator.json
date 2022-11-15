@@ -1,10 +1,18 @@
 {
+    "storeData": [
+        "dataStore"
+    ],
     "logging": {
         "where": [
-            "logFiless"
+            "logFiles"
         ],
         "type": [
             "all"
         ]
-    }
+    },
+    "context": {
+        "idNumber": 0
+    },
+    "library": "libraryContext",
+    "extension": ".json"
 }

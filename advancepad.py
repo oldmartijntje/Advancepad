@@ -10,44 +10,57 @@ import datetime
 # warning
 # deleteAfter
 
+interperatorFile = 'interperator'
+fileExtension = '.json'
+interperatorFileExtension = fileExtension
 maxPathLength = 10
 baseInterperator = {"storeData": ["dataStore"], "logging": {"where": ["logFiles"], "type": ["all"]},
-    "context": {"idNumber":0}, "library":"libraryContext"}
+    "context": {"idNumber":0}, "library":"libraryContext", "extension": ".json"}
+baseLibContext = {"items": {}}
 logFile = ''
 basePath = ''
+interperator = {}
+libContext = {}
 
 def checkLoadSaveJson(location = '', data =''):
-    if os.path.exists(f'{location}.json'):
-        with open(f'{location}.json') as level_json_file:
+    if os.path.exists(f'{location}{fileExtension}'):
+        with open(f'{location}{fileExtension}') as level_json_file:
             data = json.load(level_json_file)
             if type(data) != dict and type(data) != list:
                 data = json.loads(data)
     else:
-        with open(f'{location}.json', 'w') as outfile:
-            json.dump(data, outfile, indent=2)
+        with open(f'{location}{fileExtension}', 'w') as outfile:
+            json.dump(data, outfile, indent=4)
+        checkLogging(f'made file: {location}{fileExtension}')
     return data
 
-def saveJson(location = '', data = ''):
-    with open(f'{location}.json', 'w') as outfile:
-        json.dump(data, outfile, indent=2)
+def saveFile(location = '', data = ''):
+    if location == interperatorFile:
+        with open(f'{location}{interperatorFileExtension}', 'w') as outfile:
+            json.dump(data, outfile, indent=4)
+    else:
+        with open(f'{location}{fileExtension}', 'w') as outfile:
+            json.dump(data, outfile, indent=4)
 
 def logging(itemToLog: str = 'defaultValue', type = ''):
-    log = open(f'{logFile}', "a+")
-    log.write(f'{type}{itemToLog}\n\n')
-    log.close() 
+    if logFile != '':
+        log = open(f'{logFile}', "a+")
+        log.write(f'{type}{itemToLog}\n\n')
+        log.close() 
 
 def checkLogging(logMessage: str = '', typeOfLog: str = 'default'):
-    if logMessage != '' and "none" not in interperator["logging"]["type"]:
-        if typeOfLog == 'default' and 'all' in interperator["logging"]["type"]:
-            logging(logMessage)
-        elif typeOfLog == 'warning' and ('all' in interperator["logging"]["type"] or 'warning' in interperator["logging"]["type"]):
-            logging(logMessage, '> Warning: ')
-        elif typeOfLog == 'error' and ('all' in interperator["logging"]["type"] or 'error' in interperator["logging"]["type"]):
-            logging(logMessage, '> Error: ')
-        elif typeOfLog == 'modify' and ('all' in interperator["logging"]["type"] or 'modify' in interperator["logging"]["type"]):
-            logging(logMessage, 'modified: ')
-        elif typeOfLog in interperator["logging"]["type"]:
-            logging(logMessage)
+    if len(interperator) > 0:
+        if logMessage != '' and "none" not in interperator["logging"]["type"]:
+            if typeOfLog == 'default' and 'all' in interperator["logging"]["type"]:
+                logging(logMessage)
+            elif typeOfLog == 'warning' and ('all' in interperator["logging"]["type"] or 'warning' in interperator["logging"]["type"]):
+                logging(logMessage, '> Warning: ')
+            elif typeOfLog == 'error' and ('all' in interperator["logging"]["type"] or 'error' in interperator["logging"]["type"]):
+                logging(logMessage, '> Error: ')
+            elif typeOfLog == 'modify' and ('all' in interperator["logging"]["type"] or 'modify' in interperator["logging"]["type"]):
+                logging(logMessage, 'modified: ')
+            elif typeOfLog in interperator["logging"]["type"] or 'all' in interperator["logging"]["type"]:
+                logging(logMessage)
 
 
 def checkMakeFolderPath(givenPath: list = []):
@@ -71,6 +84,8 @@ def exitCode():
     log = open(f'{logFile}', "r")
     text = log.read()
     log.close()
+    saveFile(interperator["library"],libContext)
+    saveFile(interperatorFile,interperator)
     if text == '' or "deleteAfter" in interperator["logging"]["type"]:
         os.remove(f'{logFile}')
 
@@ -86,8 +101,11 @@ def createFile(name):
     
 
 
-interperator = checkLoadSaveJson('interperator',baseInterperator)
+interperator = checkLoadSaveJson(interperatorFile,baseInterperator)
 
+if not "extension" in interperator:
+    interperator["extension"] = baseInterperator["extension"]
+fileExtension = interperator["extension"]
 if not "logging" in interperator:
     interperator["logging"] = baseInterperator["logging"]
 if not "where" in interperator["logging"]:
@@ -109,9 +127,9 @@ if not "context" in interperator:
 if not "library" in interperator:
     interperator["library"] = baseInterperator["library"]
     checkLogging(f"interperator[\"storeData\"] was not a thing, so we made it ```\"{interperator['library']}\"```", 'warning')
-if not os.path.isdir(interperator["library"]):
-    os.mkdir(interperator["library"])
-    checkLogging(f"os.mkdir({interperator['library']}) interperator['library']", 'modify')
+libContext = checkLoadSaveJson(interperator["library"],baseLibContext)
+
+
 
 
 createFile('henk')
@@ -119,4 +137,5 @@ createFile('henk')
 
 
 # os.remove(f'interperator.json')
+
 exitCode()
