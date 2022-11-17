@@ -46,16 +46,16 @@ def saveFile(location = '', data = ''):
             with open(f'{location}{fileExtension}', 'w') as outfile:
                 json.dump(data, outfile, indent=4)
 
-def logging(itemToLog: str = 'defaultValue', type = ''):
+def logging(itemToLog: str = '', type = ''):
     if logFile != '':
         log = open(f'{logFile}', "a+")
         log.write(f'{type}{itemToLog}\n\n')
         log.close() 
 
-def checkLogging(logMessage: str = '', typeOfLog: str = 'default'):
+def checkLogging(logMessage: str = '', typeOfLog: str = 'info'):
     if len(interperator) > 0 and logFile != '':
         if logMessage != '' and "none" not in interperator["logging"]["type"]:
-            if typeOfLog == 'default' and 'all' in interperator["logging"]["type"]:
+            if typeOfLog == 'info' and 'all' in interperator["logging"]["type"]:
                 logging(logMessage)
             elif typeOfLog == 'warning' and ('all' in interperator["logging"]["type"] or 'warning' in interperator["logging"]["type"]):
                 logging(logMessage, '> Warning: ')
